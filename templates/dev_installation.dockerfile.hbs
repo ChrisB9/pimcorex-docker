@@ -1,0 +1,4 @@
+RUN apt-get update && \
+  apt-get install -y sudo vim bash-completion mariadb-client && \
+  usermod -aG sudo application && \
+  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

@@ -1,0 +1,13 @@
+[settings]
+template_path = "templates/"
+output_path = "Dockerfile"
+base_template = "template"
+available_flags = ["is_dev"]
+
+[container_types]
+[container_types.prod]
+from = "webdevops/php-nginx:8.0"
+flags = []
+[container_types.dev]
+from = "webdevops/php-nginx-dev:8.0"
+flags = ["is_dev"]
