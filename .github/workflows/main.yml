@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: dockerfile_generator
+          version: latest
+          use-tool-cache: true
+      - run: |
+          dockerfile_generator prod --type=dev
+      - name: DEV Build and push Docker images
+        uses: docker/build-push-action@v1.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: chrisb9/pimcore-dev
+          tags: dev
+          path: .
+      - run: |
+          dockerfile_generator prod --type=prod
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1.1.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: chrisb9/pimcore-docker
+          tags: prod
+          path: .
