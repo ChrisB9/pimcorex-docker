@@ -77,7 +77,8 @@ RUN set -eux; \
 
 RUN install-php-extensions \
     apcu \
-    {{~#if_flag "is_dev" }}xdebug-^3 \{{~/if_flag}}
+    {{~#if_flag "is_dev" }}xdebug-^3 \
+    {{~/if_flag}}
     mongodb \
     zip \
     soap \
