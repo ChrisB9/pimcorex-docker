@@ -130,7 +130,7 @@ RUN set -eux; \
     \
     curl -sL https://deb.nodesource.com/setup_14.x | bash -; \
         apt-get install -y nodejs; \
-        npm install -g sqip; \
+        npm install -g sqip yarn; \
         npm cache clean --force
 
 RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-x86_64-lnx.zip \

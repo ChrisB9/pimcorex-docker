@@ -3,10 +3,10 @@ FROM $FROM
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 
-{{~#if_flag "is_dev" }}
-{{> dev_installation }}
-{{~/if_flag}}
 {{> dependencies }}
+{{~#if_flag "is_dev" }}
+    {{> dev_installation }}
+{{~/if_flag}}
 {{> nginx_brotli }}
 
 RUN apt-get autoremove -y; \
@@ -17,14 +17,16 @@ RUN apt-get autoremove -y; \
 RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /home/$APPLICATION_USER/.git-completion.bash && \
-    curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/$APPLICATION_USER/.git-prompt.sh && \
-    curl https://raw.githubusercontent.com/ogham/exa/master/completions/completions.bash > /home/$APPLICATION_USER/.completions.bash
+curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/$APPLICATION_USER/.git-prompt.sh && \
+curl https://raw.githubusercontent.com/ogham/exa/master/completions/bash/exa > /home/$APPLICATION_USER/.completions.bash
 
 RUN docker-service enable postfix
 
 COPY additional_bashrc.sh /home/$APPLICATION_USER/.additional_bashrc.sh
 RUN echo "source ~/.additional_bashrc.sh" >> /home/$APPLICATION_USER/.bashrc
-COPY nginx.conf /opt/docker/etc/nginx/vhost.common.d/00-pimcore.conf
+COPY pimcore.conf /opt/docker/etc/nginx/vhost.common.d/00-pimcore.conf
 COPY php.ini /opt/docker/etc/php/php.webdevops.ini
+COPY entrypoints/entrypoint.sh /opt/docker/bin/entrypoint.sh
+COPY entrypoints/uid-gid.sh /opt/docker/provision/entrypoint.d/00-application-uid-gid.sh
 
 WORKDIR /app/

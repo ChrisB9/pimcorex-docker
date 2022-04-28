@@ -2,10 +2,6 @@ ARG FROM=webdevops/php-nginx-dev:8.0
 FROM $FROM
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
-RUN apt-get update && \
-  apt-get install -y sudo vim bash-completion mariadb-client && \
-  usermod -aG sudo application && \
-  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN set -eux; \
     apt-get update; \
@@ -86,7 +82,6 @@ RUN set -eux; \
 
 RUN install-php-extensions \
     apcu \xdebug-^3 \
-    pcov \
     mongodb \
     zip \
     soap \
@@ -138,7 +133,7 @@ RUN set -eux; \
     \
     curl -sL https://deb.nodesource.com/setup_14.x | bash -; \
         apt-get install -y nodejs; \
-        npm install -g sqip; \
+        npm install -g sqip yarn; \
         npm cache clean --force
 
 RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-x86_64-lnx.zip \
@@ -146,22 +141,19 @@ RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-
     && rm amber-v0.5.8-x86_64-lnx.zip \
     && mv amb* /usr/local/bin/
 
+    RUN apt-get update && \
+  apt-get install -y sudo vim bash-completion mariadb-client && \
+  usermod -aG sudo application && \
+  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+  cargo install broot
+
 RUN cd /tmp \
-        && mkdir install-nginx \
-        && cd install-nginx \
-        && echo "deb http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" >> /etc/apt/sources.list.d/nginx.list \
-        && echo "deb-src http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" >> /etc/apt/sources.list.d/nginx.list \
-        && curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add - \
-        && apt-key fingerprint ABF5BD827BD9BF62 \
-        && apt-get update && apt-get remove -y nginx nginx-full && DEBIAN_FRONTEND=noninteractive apt-get install -q -y -o Dpkg::Options::=--force-confdef nginx \
-        && apt source nginx \
+        && apt-get update && apt-get install -y libperl-dev python3-pip \
+        && export NGVER=$(nginx -v 2>&1 >/dev/null | cut -d/ -f 2) \
+        && wget https://nginx.org/download/nginx-${NGVER}.tar.gz && tar zxf nginx-${NGVER}.tar.gz && rm nginx-${NGVER}.tar.gz \
+        && mv nginx-${NGVER}/ nginx-src/ \
         && git clone https://github.com/google/ngx_brotli.git \
-        && cd ngx_brotli \
-        && git submodule update --init \
-        && cd .. \
-        && apt-get build-dep -y nginx \
-        && apt-get install -y libperl-dev python3-pip \
-        && cd nginx-1.* \
+        && cd ngx_brotli && git submodule update --init && cd ../nginx-src \
         && ./configure \
                 --with-http_ssl_module \
         		--with-http_realip_module \
@@ -192,12 +184,14 @@ RUN cd /tmp \
                 --add-dynamic-module=../ngx_brotli \
         && make modules \
         && cp objs/*.so /usr/lib/nginx/modules \
-        && ln -s /usr/lib/nginx/modules /etc/nginx/modules \
+        && mkdir -p /etc/nginx/modules-enabled \
         && echo "load_module modules/ngx_http_brotli_filter_module.so;" >> /etc/nginx/modules-enabled/brotli.conf \
         && echo "load_module modules/ngx_http_brotli_static_module.so;" >> /etc/nginx/modules-enabled/brotli.conf \
         && rm -rf /var/lib/apt/lists/* \
         && rm -rf /tmp/install-nginx \
         && sed -i 's/user www-data;/user application application;/g' /etc/nginx/nginx.conf
+
+COPY nginx.conf /etc/nginx/nginx.conf
 
 
 RUN apt-get autoremove -y; \
@@ -208,15 +202,16 @@ RUN apt-get autoremove -y; \
 RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /home/$APPLICATION_USER/.git-completion.bash && \
-    curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/$APPLICATION_USER/.git-prompt.sh && \
-    curl https://raw.githubusercontent.com/ogham/exa/master/completions/completions.bash > /home/$APPLICATION_USER/.completions.bash
+curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/$APPLICATION_USER/.git-prompt.sh && \
+curl https://raw.githubusercontent.com/ogham/exa/master/completions/bash/exa > /home/$APPLICATION_USER/.completions.bash
 
 RUN docker-service enable postfix
 
 COPY additional_bashrc.sh /home/$APPLICATION_USER/.additional_bashrc.sh
 RUN echo "source ~/.additional_bashrc.sh" >> /home/$APPLICATION_USER/.bashrc
-COPY nginx.conf /opt/docker/etc/nginx/vhost.common.d/00-pimcore.conf
-COPY ../.docker/setup_crontab.sh /opt/docker/provision/entrypoint.d/setup_crontab.sh
+COPY pimcore.conf /opt/docker/etc/nginx/vhost.common.d/00-pimcore.conf
 COPY php.ini /opt/docker/etc/php/php.webdevops.ini
+COPY entrypoints/entrypoint.sh /opt/docker/bin/entrypoint.sh
+COPY entrypoints/uid-gid.sh /opt/docker/provision/entrypoint.d/00-application-uid-gid.sh
 
 WORKDIR /app/
