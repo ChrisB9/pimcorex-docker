@@ -6,8 +6,8 @@ available_flags = ["is_dev"]
 
 [container_types]
 [container_types.prod]
-from = "webdevops/php-nginx:8.0"
+from = "webdevops/php-nginx:8.1"
 flags = []
 [container_types.dev]
-from = "webdevops/php-nginx-dev:8.0"
+from = "webdevops/php-nginx-dev:8.1"
 flags = ["is_dev"]

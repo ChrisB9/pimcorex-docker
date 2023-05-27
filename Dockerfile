@@ -1,4 +1,4 @@
-ARG FROM=webdevops/php-nginx-dev:8.0
+ARG FROM=webdevops/php-nginx-dev:8.1
 FROM $FROM
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
@@ -27,6 +27,7 @@ RUN set -eux; \
         html2text \
         inkscape \
         iputils-ping \
+        iproute2 \
         jpegoptim \
         libbz2-dev \
         libc-client-dev \
@@ -53,7 +54,6 @@ RUN set -eux; \
         libtool \
         libwebp-dev \
         libwmf-dev \
-        libx11-dev \
         libxext-dev \
         libxml2-dev \
         libxpm-dev \
@@ -67,7 +67,7 @@ RUN set -eux; \
         make \
         nasm \
         ninja-build \
-        opencv-data \
+        optipng \
         openssl \
         pkg-config \
         pngcrush \
@@ -88,53 +88,10 @@ RUN install-php-extensions \
     gd \
     pcntl \
     redis \
-    imagick
-
-RUN set -eux; \
-    cd /tmp; \
-    \
-    wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz; \
-        tar xvf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz; \
-        mv wkhtmltox/bin/wkhtmlto* /usr/bin/; \
-    \
-    git clone https://github.com/mozilla/mozjpeg.git ; \
-        cd mozjpeg; \
-        cmake -G"Unix Makefiles"; \
-        make; \
-        make install; \
-        cd ..; \
-    \
-    git clone https://gitlab.com/wavexx/facedetect; \
-        pip3 install --no-cache-dir --upgrade pip setuptools wheel; \
-        pip3 install --no-cache-dir scikit-build; \
-        pip3 install --no-cache-dir numpy opencv-python; \
-        cd facedetect; \
-        cp facedetect /usr/local/bin; \
-        cd ..; \
-    \
-    git clone https://github.com/google/zopfli.git; \
-        cd zopfli; \
-        make; \
-        cp zopfli /usr/bin/zopflipng; \
-        cd ..; \
-    \
-    wget http://static.jonof.id.au/dl/kenutils/pngout-20150319-linux.tar.gz; \
-        tar -xf pngout-20150319-linux.tar.gz; \
-        rm pngout-20150319-linux.tar.gz; \
-        cp pngout-20150319-linux/x86_64/pngout /bin/pngout; \
-    \
-    wget http://prdownloads.sourceforge.net/advancemame/advancecomp-1.17.tar.gz; \
-        tar zxvf advancecomp-1.17.tar.gz; \
-        cd advancecomp-1.17; \
-        ./configure; \
-        make; \
-        make install; \
-        cd ..; \
-    \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash -; \
-        apt-get install -y nodejs; \
-        npm install -g sqip yarn; \
-        npm cache clean --force
+    imagick \
+    sockets \
+    bcmath \
+    exif
 
 RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-x86_64-lnx.zip \
     && unzip amber-v0.5.8-x86_64-lnx.zip \
@@ -144,8 +101,7 @@ RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-
     RUN apt-get update && \
   apt-get install -y sudo vim bash-completion mariadb-client && \
   usermod -aG sudo application && \
-  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-  cargo install broot
+  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN cd /tmp \
         && apt-get update && apt-get install -y libperl-dev python3-pip \

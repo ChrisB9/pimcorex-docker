@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [ main ]
+    branches: [ v1, v2 ]
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: chrisb9/pimcore-docker
-          tags: dev
+          tags: v2-dev
           path: .
       - run: |
           dockerfile_generator prod --type=prod
@@ -32,5 +32,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: chrisb9/pimcore-docker
-          tags: prod
+          tags: v2-prod
           path: .
