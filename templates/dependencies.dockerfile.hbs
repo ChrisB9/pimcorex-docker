@@ -90,6 +90,11 @@ RUN install-php-extensions \
     bcmath \
     exif
 
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -; \
+        apt-get install -y nodejs; \
+        npm install -g yarn; \
+        npm cache clean --force
+
 RUN wget https://github.com/dalance/amber/releases/download/v0.5.8/amber-v0.5.8-x86_64-lnx.zip \
     && unzip amber-v0.5.8-x86_64-lnx.zip \
     && rm amber-v0.5.8-x86_64-lnx.zip \
