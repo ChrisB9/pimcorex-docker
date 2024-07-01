@@ -91,7 +91,7 @@ RUN install-php-extensions \
     bcmath \
     exif
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -; \
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -; \
         apt-get install -y nodejs; \
         npm install -g yarn; \
         npm cache clean --force
