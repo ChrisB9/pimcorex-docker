@@ -9,29 +9,43 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - uses: actions-rs/install@v0.1
         with:
           crate: dockerfile_generator
           version: latest
           use-tool-cache: true
+
       - run: |
           dockerfile_generator prod --type=dev
+
       - name: DEV Build and push Docker images
-        uses: docker/build-push-action@v1.1.0
+        uses: docker/build-push-action@v4
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: chrisb9/pimcore-docker
-          tags: v2-dev
-          path: .
+          push: true
+          tags: chrisb9/pimcore-docker:v2-dev
+
       - run: |
           dockerfile_generator prod --type=prod
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v1.1.0
+
+      - name: PROD Build and push Docker images
+        uses: docker/build-push-action@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: chrisb9/pimcore-docker
-          tags: v2-prod
-          path: .
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: chrisb9/pimcore-docker:v2-prod
