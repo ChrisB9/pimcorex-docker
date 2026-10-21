@@ -3,6 +3,8 @@ FROM $FROM
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 
+{{> php_patch }}
+
 {{> dependencies }}
 {{~#if_flag "is_dev" }}
     {{> dev_installation }}
